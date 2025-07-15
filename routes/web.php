@@ -32,7 +32,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customer', CustomerController::class);
     Route::resource('user', UserController::class);
     Route::resource('trans', TransOrderController::class);
-    Route::get('print_struk/{id}', [TransOrderController::class, 'printStruk'])->name('print_struk');
+    Route::get('/trans/{id}/print-struk', [TransOrderController::class, 'printStruk'])->name('print_struk');
+
 
     Route::post('trans/{id}/snap', [TransOrderController::class, 'snap'])->name('trans.snap');
+    Route::get('trans/laundry', [TransOrderController::class, 'createLaundry'])->name('trans.createLaundry');
 });

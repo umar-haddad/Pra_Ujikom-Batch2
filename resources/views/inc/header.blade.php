@@ -205,7 +205,7 @@
             <li>
               <a class="dropdown-item d-flex align-items-center" href="...">
                 <i class="bi bi-bag-check"></i>
-                <span>Transactions</span>
+                <span></span>
               </a>
             </li>
             <li>

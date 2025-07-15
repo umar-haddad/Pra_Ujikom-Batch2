@@ -41,17 +41,19 @@ class TransOrderController extends Controller
      */
     public function create()
     {
-        $title = "Tambah Transaksi";
+        //TR-01072025-001
+        $title = 'Add Transaction';
+
+        // $today = date('dmY');
         $today = Carbon::now()->format('dmY');
         $countDay = TransOrders::whereDate('created_at', now()->toDateString())->count() + 1;
         $runningNumber = str_pad($countDay, 3, '0', STR_PAD_LEFT);
         $orderCode = "TR-" . $today . "-" . $runningNumber;
 
-        $customers = Customers::OrderBy('id', 'desc')->get();
+        $customers = Customers::orderBy('id', 'desc')->get();
         $services = TypeOfServices::orderBy('id', 'desc')->get();
-
-
-        return view('trans.laundry', compact('title', 'orderCode', 'customers', 'services'));
+        $datas = TransOrders::orderBy('id', 'desc')->get();
+        return view('trans.laundry', compact('title', 'orderCode', 'customers', 'services', 'datas'));
     }
 
     /**
@@ -87,6 +89,7 @@ class TransOrderController extends Controller
         $title = "Detail Transaksi";
         $details = TransOrders::with(['customer', 'transOrderDetail.service'])->where('id', $id)->first();
         return view('trans.show', compact('title', 'details'));
+        dd($details);
     }
 
     /**

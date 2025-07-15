@@ -20,7 +20,7 @@
                             <tr>
                                 <th>Alamat</th>
                                 <td>:</td>
-                                <td>{{ $details->customer->address }}</td>
+                                <td>{{ $details->customer->address}}</td>
                             </tr>
                         </thead>
                     </table>
