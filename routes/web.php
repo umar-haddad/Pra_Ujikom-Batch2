@@ -9,6 +9,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransOrderController;
+use App\Http\Controllers\TransOrderPaymentController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -32,9 +33,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customer', CustomerController::class);
     Route::resource('user', UserController::class);
     Route::resource('trans', TransOrderController::class);
-    Route::get('/trans/{id}/print-struk', [TransOrderController::class, 'printStruk'])->name('print_struk');
+    Route::get('/trans/{id}/print-struk', [TransOrderPaymentController::class, 'printStruk'])->name('print_struk');
 
 
-    Route::post('trans/{id}/snap', [TransOrderController::class, 'snap'])->name('trans.snap');
+    Route::post('trans/{id}/snap', [TransOrderPaymentController::class, 'snap'])->name('trans.snap');
     Route::get('trans/laundry', [TransOrderController::class, 'createLaundry'])->name('trans.createLaundry');
+    // Route::post('/transactions', [TransOrderPaymentController::class, 'apiTransactions']);
 });

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wakey_Laundry - POS</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Sistem Informasi Laundry - POS</title>
     <link href="{{ asset('../../../assets/vendor/laundry/laundry.css') }}" rel="stylesheet">
 </head>
 <body>
@@ -82,9 +83,9 @@
                         <div class="form-group">
                             <label>Jenis Layanan</label>
                             <select id="serviceType" required>
-                                <option value="">--Pilih Layanan--</option>
+                                <option value="">Pilih Layanan</option>
                                 @foreach ($services as $service)
-                                <option data-price="{{ $service->price }}" value="{{ $service->id }}">{{ $service->service_name }}</option>
+                                <option data-price="{{ $service->price }}" data-service_name="{{ $service->service_name }}" value="{{ $service->id }}">{{ $service->service_name }}</option>
                                 @endforeach
 
                             </select>
@@ -131,17 +132,23 @@
             <!-- Right Panel: Transaction History -->
             <div class="card">
                 <h2>📊 Riwayat Transaksi</h2>
-                <div class="transaction-list" id="">
-                    @foreach ($datas as $key => $data )
+                <div class="transaction-list" id="transactionHistory">
                     <div class="transaction-item">
-                        <h4>{{ $data->order_code }}</h4>
-                        <p>📞 {{ $data->customer->phone }}</p>
-                        <p>🛍️ {{ $data->customer->address }}</p>
-                        <p>💰 Rp. {{ number_format($data->customer->total) }}</p>
-                        <p>📅 {{date('d F Y', strtotime($data->order_end_date)) }}</p>
-                        <span class="status-badge status-process">{{ $data->status_text }}</span>
+                        <h4>TRX-001 - John Doe</h4>
+                        <p>📞 0812-3456-7890</p>
+                        <p>🛍️ Cuci Setrika - 2.5kg</p>
+                        <p>💰 Rp 17.500</p>
+                        <p>📅 13 Juli 2025, 14:30</p>
+                        <span class="status-badge status-process">Proses</span>
                     </div>
-                    @endforeach
+                    <div class="transaction-item">
+                        <h4>TRX-002 - Jane Smith</h4>
+                        <p>📞 0813-7654-3210</p>
+                        <p>🛍️ Cuci Kering - 3kg</p>
+                        <p>💰 Rp 15.000</p>
+                        <p>📅 13 Juli 2025, 13:15</p>
+                        <span class="status-badge status-ready">Siap</span>
+                    </div>
                 </div>
 
                 <button class="btn btn-warning" onclick="showAllTransactions()" style="width: 100%; margin-top: 15px;">
@@ -174,6 +181,10 @@
 
     <script>
 
+        document.addEventListener("DOMContentLoaded", (event) => {
+  console.log("DOM fully loaded and parsed");
+});
+
 
         const customerSelect = document.querySelector('#customerName');
             customerSelect.addEventListener('change', function () {
@@ -189,43 +200,39 @@
         let cart = [];
         let transactions = JSON.parse(localStorage.getItem('laundryTransactions')) || [];
         let transactionCounter = transactions.length + 1;
-
         function addService(serviceName, price) {
             document.getElementById('serviceType').value = serviceName;
             document.getElementById('serviceWeight').focus();
         }
 
-        function addToCart() {
-            const serviceType = document.getElementById('serviceType').value;
-            const serviceOption = serviceType.option(serviceType.selectedIndex);
-            const weight = parseFloat(document.getElementById('serviceWeight').value);
-            const notes = document.getElementById('notes').value;
+        // function addToCart() {
+        //     const serviceType = document.getElementById('serviceType').value;
+        //     const weight = parseFloat(document.getElementById('serviceWeight').value);
+        //     const notes = document.getElementById('notes').value;
 
-            if (!serviceType || !weight || weight <= 0) {
-                alert('Mohon lengkapi semua field yang diperlukan!');
-                return;
-            }
+        //     if (!serviceType || !weight || weight <= 0) {
+        //         alert('Mohon lengkapi semua field yang diperlukan!');
+        //         return;
+        //     }
 
-            const price = prices[serviceType];
-            const subtotal = price * weight;
 
-            const item = {
-                id: Date.now(),
-                service: serviceType,
-                weight: weight,
-                price: price,
-                subtotal: subtotal,F
-                notes: notes
-            };
+        //     const item = {
+        //         id: Date.now(),
+        //         service: serviceType,
+        //         weight: weight,
+        //         price: price,
+        //         subtotal: subtotal,
+        //         notes: notes
+        //     };
 
-            cart.push(item);
-            updateCartDisplay();
+        //     cart.push(item);
+        //     updateCartDisplay();
 
-            // Clear form
-            document.getElementById('serviceType').value = '';
-            document.getElementById('serviceWeight').value = '';
-            document.getElementById('notes').value = '';
-        }
+        //     // Clear form
+        //     document.getElementById('serviceType').value = '';
+        //     document.getElementById('serviceWeight').value = '';
+        //     document.getElementById('notes').value = '';
+        // }
 
         function updateCartDisplay() {
             const cartItems = document.getElementById('cartItems');
@@ -242,25 +249,7 @@
             let html = '';
             let total = 0;
 
-            cart.forEach(item => {
-                html += `
-                     <tr>
-                        <td>${item.service}</td>
-                        <td>${formattedWeight} ${unit}</td>
-                        <td>${formattedPrice}</td>
-                        <td>${formattedSubtotal}</td>
-                        <td>
-                            <button class="btn btn-danger" onclick="removeFromCart(${item.id})" style="padding: 5px 10px; font-size: 12px;">
-                                🗑️
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                total += item.subtotal;
-            });
 
-            cartItems.innerHTML = html;
-            totalAmount.textContent = `Rp ${total.toLocaleString()}`;
 
 
         }
@@ -277,7 +266,9 @@
         }
 
         function processTransaction() {
-            const customerName = document.getElementById('customerName').value;
+            const customerSelect = document.getElementById('customerName');
+            const customerId = customerSelect.value;
+            const customerName = customerSelect.options[customerSelect.selectedIndex].text;
             const customerPhone = document.getElementById('customerPhone').value;
             const customerAddress = document.getElementById('customerAddress').value;
 
@@ -302,6 +293,24 @@
             };
 
             transactions.push(transaction);
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            fetch('/trans', {
+                    method : "POST",
+                    headers : {
+                        "Content-Type" : "application/json",
+                        'X-CSRF-TOKEN': token,
+                    },
+
+                    body:JSON.stringify(transactions)
+                })
+                .then((response) => response.json())
+                .then(function (result) {
+                    console.log(result);
+                })
+                .catch((error) => {
+                    console.log(error)
+                })
+
             localStorage.setItem('laundryTransactions', JSON.stringify(transactions));
 
             transactionCounter++;
@@ -325,7 +334,7 @@
                     </div>
 
                     <div style="margin-bottom: 20px;">
-                        <strong>Pelanggan: </strong><br>
+                        <strong>Pelanggan:</strong><br>
                         ${transaction.customer.name}<br>
                         ${transaction.customer.phone}<br>
                         ${transaction.customer.address}
@@ -355,7 +364,7 @@
                 </div>
 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-primary" onclick="printStruk()">🖨️ Cetak Struk</button>
+                    <button class="btn btn-primary" onclick="printReceipt()">🖨️ Cetak Struk</button>
                     <button class="btn btn-success" onclick="closeModal()">✅ Selesai</button>
                 </div>
             `;
@@ -374,7 +383,7 @@
 
             const html = recentTransactions.map(transaction => `
                 <div class="transaction-item">
-                    <h4>${transaction.customer.name}${transaction.id}</h4>
+                    <h4>${transaction.id} - ${transaction.customer.name}</h4>
                     <p>📞 ${transaction.customer.phone}</p>
                     <p>🛍️ ${transaction.items.map(item => `${item.service} - ${item.weight} : 'kg'}`).join(', ')}</p>
                     <p>💰 Rp ${transaction.total.toLocaleString()}</p>
@@ -620,7 +629,6 @@
 
         function closeModal() {
             document.getElementById('transactionModal').style.display = 'none';
-
         }
 
         function formatNumber(input) {
@@ -663,12 +671,16 @@
 
         // Update addToCart function to handle decimal with comma
         function addToCart() {
-            const serviceType = document.getElementById('serviceType').value;
+            const selectService = document.getElementById('serviceType');
+            const optionService = selectService.options[selectService.selectedIndex];
+            const serviceName = optionService.getAttribute('data-service_name');
+            const priceService = parseInt(optionService.dataset.price);
+            const nameService = optionService.textContent;
             const weightValue = document.getElementById('serviceWeight').value;
             const weight = parseDecimal(weightValue);
             const notes = document.getElementById('notes').value;
 
-            if (!serviceType || !weightValue || weight <= 0) {
+            if (!selectService || !weightValue || weight <= 0) {
                 alert('Mohon lengkapi semua field yang diperlukan!');
                 return;
             }
@@ -681,13 +693,13 @@
             };
 
             const price = prices[serviceType];
-            const subtotal = price * weight;
+            const subtotal = priceService * weight;
 
             const item = {
                 id: Date.now(),
-                service: serviceType,
+                service: serviceName,
                 weight: weight,
-                price: price,
+                price: priceService,
                 subtotal: subtotal,
                 notes: notes
             };
@@ -773,27 +785,6 @@
                 transactionCounter = transactions.length + 1;
             }
         }
-
-        // buat save database dari localStorage
-        function saveTransactionToServer(transaction) {
-    fetch('/transactions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-        },
-        body: JSON.stringify(transaction),
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Berhasil simpan:', data);
-        alert('Transaksi berhasil disimpan ke database!');
-    })
-    .catch(error => {
-        console.error('Error simpan transaksi:', error);
-        alert('Terjadi kesalahan menyimpan transaksi.');
-    });
-}
 
         // Initialize with sample data
         addSampleData();
