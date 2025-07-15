@@ -59,7 +59,7 @@
         <div class="card">
             <div class="card-body">
                 <h2 class="card-title text-center">PEMESANAN</h2>
-                <form action="" method="post" id="paymentForm" data-order-id="{{ $details->id }}">
+                <form action="{{ route('trans.cash', $details->id) }}" method="post" id="paymentForm" data-order-id="{{ $details->id }}">
                 <table class="table table-bordered">
                     <thead>
                         <tr>
@@ -71,7 +71,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($details->transOrderDetail as $index => $detail)
+                        @foreach ($details->details as $index => $detail)
                         <tr>
                             <td>{{ $index += 1 }}</td>
                             <td>{{ $detail->service->service_name }}</td>
@@ -102,7 +102,7 @@
                     </tfoot>
                 </table>
                  <div class="mt-3">
-                        <button class="btn btn-primary" name="payment_method" value="cash">Bayar Cash</button>
+                        <button type="submit" class="btn btn-primary" name="payment_method" value="cash">Bayar Cash</button>
                         <button class="btn btn-success" name="payment_method" value="midTrans">Cashless</button>
                     </div>
                 </form>
@@ -111,12 +111,13 @@
     </div>
 </div>
 <script>
+    const formPayment = document.getElementById('paymentForm')
     const orderPay = document.getElementById('order_pay');
     const orderChange = document.getElementById('order_change');
     const orderChangeDisplay = document.getElementById('order_change_display');
     const grandTotal = document.getElementById('grand_total');
 
-    orderPay.addEventListener('input', function() {
+    formPayment.addEventListener('submit', function() {
         const total = {{ $details->total }};
         const pay = parseInt(orderPay.value) || 0;
         const change = pay - total;
@@ -134,11 +135,17 @@ type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-
 </script>
 <script>
     document.getElementById('paymentForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-
     const form = e.target;
     const method = form.querySelector(`[name="payment_method"]:checked, [name="payment_method"]:focus`)?.value;
 
+    if (method === 'cash') {
+        // biarkan submit normal
+        return;
+    }
+
+    e.preventDefault();
+
+    // AJAX untuk Midtrans
     const data = {
         order_pay: document.getElementById('order_pay').value,
         order_change: document.getElementById('order_change').value,
@@ -147,39 +154,34 @@ type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-
     };
 
     const orderId = form.dataset.orderId?.trim();
-    console.log(orderId);
 
-    if (method === 'cash') {
-        form.submit();
-    } else {
-        fetch("{{ url('trans') }}/" + orderId + "/snap", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': data._token,
-            },
-            body: JSON.stringify(data)
-        })
-        .then(res => res.json())
-        .then(res => {
-            if (res.token) {
-                snap.pay(res.token, {
-                    onSuccess: function(result) {
-                        window.location.href = "/midtrans/finish?order_id=" + orderId;
-                    },
-                    onPending: function(result) {
-                        alert("Silakan selesaikan pembayaran.");
-                    },
-                    onError: function(result) {
-                        alert("Pembayaran gagal.");
-                    }
-                });
-            } else {
-                alert('token tidak ditemukan!');
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
+    fetch("{{ url('trans') }}/" + orderId + "/snap", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': data._token,
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.token) {
+            snap.pay(res.token, {
+                onSuccess: function(result) {
+                    window.location.href = "/midtrans/finish?order_id=" + orderId;
+                },
+                onPending: function(result) {
+                    alert("Silakan selesaikan pembayaran.");
+                },
+                onError: function(result) {
+                    alert("Pembayaran gagal.");
+                }
+            });
+        } else {
+            alert('token tidak ditemukan!');
+        }
+    })
+    .catch(error => console.error('Error:', error));
 });
 
 </script>

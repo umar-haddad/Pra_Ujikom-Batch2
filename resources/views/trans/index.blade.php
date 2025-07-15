@@ -33,6 +33,7 @@
                                 <td>{{ $data->status_text }}</td>
                                 <td>
                                     <a href="{{ route('print_struk', $data->id) }}" target="_blank" class="btn btn-success">Print</a>
+                                    <a href="{{route('trans.show', $data->id)}}" class="btn btn-success">Tampilkan</a>
                                     <form action="{{ route('trans.destroy', $data->id) }}" method="POST" style="display: inline;">
                                         @csrf
                                         @method('DELETE')

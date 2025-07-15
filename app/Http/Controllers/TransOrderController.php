@@ -2,31 +2,35 @@
 
 namespace App\Http\Controllers;
 
-
-
+use Midtrans\Snap;
+use Midtrans\Config;
 use App\Models\Customers;
 use App\Models\TransOrders;
 use Illuminate\Http\Request;
 use App\Models\TypeOfServices;
 use Illuminate\Support\Carbon;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\TransOrderDetail;
-use RealRashid\SweetAlert\Facades\Alert;
 
 class TransOrderController extends Controller
 {
+
+    public function __construct()
+    {
+        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
+    }   
     /**
      * Display a listing of the resource.
      */
-
-
     public function index()
     {
-        $datas = TransOrders::with('customer')->orderBy('id', 'desc')->get(); // with->ngambil dari data customer
-        $title = "Transaksi Order";
-
-
-        return view('trans.index', compact('title', 'datas'));
+        $datas = TransOrders::with('customer')->orderBy('id', 'desc')->get();
+        // $datas = TransOrders::all();
+        $title = 'Transaction';
+        return view('trans.index',  compact('datas', 'title'));
     }
 
     /**
@@ -45,8 +49,7 @@ class TransOrderController extends Controller
 
         $customers = Customers::orderBy('id', 'desc')->get();
         $services = TypeOfServices::orderBy('id', 'desc')->get();
-        $datas = TransOrders::orderBy('id', 'desc')->get();
-        return view('trans.laundry', compact('title', 'orderCode', 'customers', 'services', 'datas'));
+        return view('trans.laundry', compact('title', 'orderCode', 'customers', 'services'));
     }
 
     /**
@@ -56,33 +59,33 @@ class TransOrderController extends Controller
     {
         $transOrder = TransOrders::create([
             'id_customer' => $request->id_customer,
-            'order_code' => $request->order_code,
-            'order_end_date' => $request->order_end_date,
-            'total' => $request->total
+            'order_code' => $request->order_code ?? 'TRX-' . time(),
+            'order_end_date' => $request->order_end_date ?? now()->addDays(2),
+            'total' => $request->total,
+            'notes' => $request->notes ?? ''
         ]);
 
-        foreach ($request->id_service as $key => $idService) {
-            $id_trans = $transOrder->id;
+
+        foreach ($request->items as $item) {
             TransOrderDetail::create([
-                'id_trans' => $id_trans,
-                'id_service' => $idService,
-                'qty' => $request->qty[$key],
-                'subtotal' => $request->subtotal[$key]
+                'id_trans' => $transOrder->id,
+                'id_service' => $item['id_service'],
+                'qty' => $item['qty'],
+                'subtotal' => $item['subtotal']
             ]);
         }
-
-        return redirect()->to('trans')->with('success', 'berhasil di order');
     }
+    // TransOrders::create($request->all());
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id, Request $request)
     {
-        $title = "Detail Transaksi";
-        $details = TransOrders::with(['customer', 'transOrderDetail.service'])->where('id', $id)->first();
+        $title = "Transaction Detail";
+        $details = TransOrders::with('customer', 'details.service')->where('id', $id)->first();
+
         return view('trans.show', compact('title', 'details'));
-        dd($details);
     }
 
     /**
@@ -106,14 +109,46 @@ class TransOrderController extends Controller
      */
     public function destroy(string $id)
     {
-        $transOrder = TransOrders::findOrFail($id);
+        $trans = TransOrders::findOrFail($id);
+        $trans->delete();
 
-        $title = 'berhasil terhapus';
-        $text = 'yakin mau hapus';
-        confirmDelete($title, $text);
+        return redirect()->to('trans')->with('success', 'Hapus Berhasil');
+    }
 
-        $transOrder->delete();
+    public function printStruk(string $id)
+    {
+        $details = TransOrders::with(['customer', 'transOrderDetail.service'])->where('id', $id)->first();
+        // return $details; // ->  buat debug laravel dan ada lagi yaitu => dd($details);
 
-        return redirect()->to('trans')->with('success', 'Hapus service Berhasil');
+        $pdf = Pdf::loadView('trans.print', compact('details'));
+        return $pdf->download('struk-transaksi.pdf');
+    }
+
+    public function snap(Request $request, $id)
+    {
+        $order = TransOrders::with('customer')->findOrFail($id);
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => 'ORDER-' . $order->id,
+                'gross_amount' => (int) $order->total,
+            ],
+            'customer_details' => [
+                'first_name' => $order->customer->first_name,
+                'email' => $order->customer->email,
+                'phone' => $order->customer->phone
+            ],
+            'enable_payment' => [
+                'qris'
+            ]
+        ];
+        // $snapToken = Snap::getSnapToken($params);
+        $snap = Snap::createTransaction($params);
+        return response()->json(['token' => $snap->token]);
+    }
+    
+    public function transStore(Request $request)
+    {
+        return $request;
     }
 }

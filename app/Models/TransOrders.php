@@ -2,28 +2,21 @@
 
 namespace App\Models;
 
+use App\Models\TransOrderDetail;
 use Illuminate\Database\Eloquent\Model;
 
 class TransOrders extends Model
 {
-    protected $fillable = [
-        'id_customer',
-        'order_end_date',
-        'order_status',
-        'order_code',
-        'total',
-        // 'order_pay',
-        'order_change'
-    ];
-    // ORM Laravel [object relation mapping]
-    //examp : LEFT JOIN
+    protected $fillable = ['id_customer', 'order_code', 'order_end_date', 'order_status',  'order_pay', 'order_change', 'total', 'note'];
 
+    //relation : ORM (Object Relation Mapping)
+    //LEFT JOIN
     public function customer()
     {
-        return $this->hasMany(Customers::class, 'id_customer', 'id');
+        return $this->belongsTo(Customers::class, 'id_customer', 'id');
     }
 
-    public function transOrderDetail()
+    public function details()
     {
         return $this->hasMany(TransOrderDetail::class, 'id_trans');
     }
@@ -32,8 +25,9 @@ class TransOrders extends Model
     {
         switch ($this->order_status) {
             case '1':
-                return "sudah bayar";
+                return "Selesai";
                 break;
+
             default:
                 return "Baru";
                 break;

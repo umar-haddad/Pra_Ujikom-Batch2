@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LevelController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\LaundryController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
@@ -32,11 +32,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('service', ServiceController::class);
     Route::resource('customer', CustomerController::class);
     Route::resource('user', UserController::class);
+    Route::post('/trans/{id}/snap', [PaymentController::class, 'snap'])->name('trans.snap');
+    Route::post('/trans/{id}/cash', [PaymentController::class, 'payCash'])->name('trans.cash');
     Route::resource('trans', TransOrderController::class);
-    Route::get('/trans/{id}/print-struk', [TransOrderPaymentController::class, 'printStruk'])->name('print_struk');
-
-
-    Route::post('trans/{id}/snap', [TransOrderPaymentController::class, 'snap'])->name('trans.snap');
-    Route::get('trans/laundry', [TransOrderController::class, 'createLaundry'])->name('trans.createLaundry');
+    Route::get('print_struk/{id}', [TransOrderController::class, 'printStruk'])->name('print_struk');
     // Route::post('/transactions', [TransOrderPaymentController::class, 'apiTransactions']);
 });

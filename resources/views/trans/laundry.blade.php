@@ -19,19 +19,19 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <h3 id="totalTransactions">0</h3>
-                <p>Total Transaksi</p>
+                <p>Total Transaction</p>
             </div>
             <div class="stat-card">
                 <h3 id="totalRevenue">Rp 0</h3>
-                <p>Total Pendapatan</p>
+                <p>Total Income</p>
             </div>
             <div class="stat-card">
                 <h3 id="activeOrders">0</h3>
-                <p>Pesanan Aktif</p>
+                <p>Active Order</p>
             </div>
             <div class="stat-card">
                 <h3 id="completedOrders">0</h3>
-                <p>Pesanan Selesai</p>
+                <p>Order Finished</p>
             </div>
         </div>
 
@@ -42,6 +42,7 @@
                 <h2>🛒 Transaksi Baru</h2>
 
                 <form id="transactionForm">
+
                     <div class="form-group">
                         <label for="customerName">Nama Pelanggan</label>
                         <select name="id_customer" id="customerName" required>
@@ -85,7 +86,7 @@
                             <select id="serviceType" required>
                                 <option value="">Pilih Layanan</option>
                                 @foreach ($services as $service)
-                                <option data-price="{{ $service->price }}" data-service_name="{{ $service->service_name }}" value="{{ $service->id }}">{{ $service->service_name }}</option>
+                                <option data-price="{{ $service->price }}" data-service_name="{{ $service->service_name }}" data-id="{{ $service->id }}" value="{{ $service->id }}">{{ $service->service_name }}</option>
                                 @endforeach
 
                             </select>
@@ -133,22 +134,7 @@
             <div class="card">
                 <h2>📊 Riwayat Transaksi</h2>
                 <div class="transaction-list" id="transactionHistory">
-                    <div class="transaction-item">
-                        <h4>TRX-001 - John Doe</h4>
-                        <p>📞 0812-3456-7890</p>
-                        <p>🛍️ Cuci Setrika - 2.5kg</p>
-                        <p>💰 Rp 17.500</p>
-                        <p>📅 13 Juli 2025, 14:30</p>
-                        <span class="status-badge status-process">Proses</span>
-                    </div>
-                    <div class="transaction-item">
-                        <h4>TRX-002 - Jane Smith</h4>
-                        <p>📞 0813-7654-3210</p>
-                        <p>🛍️ Cuci Kering - 3kg</p>
-                        <p>💰 Rp 15.000</p>
-                        <p>📅 13 Juli 2025, 13:15</p>
-                        <span class="status-badge status-ready">Siap</span>
-                    </div>
+
                 </div>
 
                 <button class="btn btn-warning" onclick="showAllTransactions()" style="width: 100%; margin-top: 15px;">
@@ -180,11 +166,6 @@
     </div>
 
     <script>
-
-        document.addEventListener("DOMContentLoaded", (event) => {
-  console.log("DOM fully loaded and parsed");
-});
-
 
         const customerSelect = document.querySelector('#customerName');
             customerSelect.addEventListener('change', function () {
@@ -260,15 +241,16 @@
         }
 
         function clearCart() {
-            cart = [];
-            updateCartDisplay();
-            document.getElementById('transactionForm').reset();
+           localStorage.removeItem('laundryTransactions'); // 🧼 Clear history
+    transactions = []; // 🗑️ Reset in-memory array
+    updateTransactionHistory(); // 🔄 Refresh display
+    updateStats(); // 📊 Refresh stats if needed
+    alert('Riwayat transaksi berhasil dibersihkan!');
         }
 
         function processTransaction() {
-            const customerSelect = document.getElementById('customerName');
-            const customerId = customerSelect.value;
-            const customerName = customerSelect.options[customerSelect.selectedIndex].text;
+            const customer = document.getElementById('customerName').options[document.getElementById('customerName').selectedIndex].value;
+            const customerName = document.getElementById('customerName').options[document.getElementById('customerName').selectedIndex].text;
             const customerPhone = document.getElementById('customerPhone').value;
             const customerAddress = document.getElementById('customerAddress').value;
 
@@ -281,6 +263,7 @@
 
             const transaction = {
                 id: `TRX-${transactionCounter.toString().padStart(3, '0')}`,
+                id_customer: customer,
                 customer: {
                     name: customerName,
                     phone: customerPhone,
@@ -293,23 +276,26 @@
             };
 
             transactions.push(transaction);
-            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             fetch('/trans', {
-                    method : "POST",
-                    headers : {
-                        "Content-Type" : "application/json",
-                        'X-CSRF-TOKEN': token,
-                    },
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-CSRF-TOKEN": token
+            },
+  body: JSON.stringify(transaction)
+})
+.then(async res => {
+  const text = await res.text();
+  try {
+    const json = JSON.parse(text);
+    console.log(json);
+  } catch (err) {
+    console.error('Server returned HTML instead of JSON:', text);
+  }
+});
 
-                    body:JSON.stringify(transactions)
-                })
-                .then((response) => response.json())
-                .then(function (result) {
-                    console.log(result);
-                })
-                .catch((error) => {
-                    console.log(error)
-                })
 
             localStorage.setItem('laundryTransactions', JSON.stringify(transactions));
 
@@ -319,7 +305,7 @@
             showReceipt(transaction);
 
             // Clear form and cart
-            clearCart();
+            
             updateTransactionHistory();
             updateStats();
         }
@@ -344,7 +330,7 @@
                         <strong>Detail Pesanan:</strong><br>
                         ${transaction.items.map(item => `
                             <div class="receipt-item">
-                                <span>${item.service} (${item.weight} : 'kg'})</span>
+                                <span>${item.service} (${item.qty} : 'kg'})</span>
                                 <span>Rp ${item.subtotal.toLocaleString()}</span>
                             </div>
                         `).join('')}
@@ -673,6 +659,7 @@
         function addToCart() {
             const selectService = document.getElementById('serviceType');
             const optionService = selectService.options[selectService.selectedIndex];
+            const serviceId = optionService.getAttribute('data-id');
             const serviceName = optionService.getAttribute('data-service_name');
             const priceService = parseInt(optionService.dataset.price);
             const nameService = optionService.textContent;
@@ -696,9 +683,9 @@
             const subtotal = priceService * weight;
 
             const item = {
-                id: Date.now(),
+                id_service: serviceId,
                 service: serviceName,
-                weight: weight,
+                qty: weight,
                 price: priceService,
                 subtotal: subtotal,
                 notes: notes
@@ -735,8 +722,8 @@
 
                 // Format weight to show decimal properly
                 const formattedWeight = item.weight % 1 === 0 ?
-                    item.weight.toString() :
-                    item.weight.toFixed(1).replace('.', ',');
+                    item.qty.toString() :
+                    item.qty.toFixed(1).replace('.', ',');
 
                 html += `
                     <tr>
@@ -759,34 +746,5 @@
         }
 
         // Add some sample data for demonstration
-        function addSampleData() {
-            const sampleTransactions = [
-                {
-                    id: 'TRX-001',
-                    customer: { name: 'John Doe', phone: '0812-3456-7890', address: 'Jl. Merdeka 123' },
-                    items: [{ service: 'Cuci Setrika', weight: 2.5, price: 7000, subtotal: 17500 }],
-                    total: 17500,
-                    date: new Date().toISOString(),
-                    status: 'process'
-                },
-                {
-                    id: 'TRX-002',
-                    customer: { name: 'Jane Smith', phone: '0813-7654-3210', address: 'Jl. Sudirman 456' },
-                    items: [{ service: 'Cuci Kering', weight: 3, price: 5000, subtotal: 15000 }],
-                    total: 15000,
-                    date: new Date(Date.now() - 3600000).toISOString(),
-                    status: 'ready'
-                }
-            ];
-
-            if (transactions.length === 0) {
-                transactions = sampleTransactions;
-                localStorage.setItem('laundryTransactions', JSON.stringify(transactions));
-                transactionCounter = transactions.length + 1;
-            }
-        }
-
-        // Initialize with sample data
-        addSampleData();
 
     </script>

@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 use Midtrans\Config;
 use Midtrans\Snap;
 
-class TransOrderController extends Controller
+class PaymentController extends Controller
 {
 
     public function __construct()
@@ -32,6 +32,41 @@ class TransOrderController extends Controller
         $title = 'Transaksi';
         return view('trans.index',  compact('datas', 'title'));
     }
+
+    public function snap(Request $request, $id)
+    {
+        $order = TransOrders::with('customer')->findOrFail($id);
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => 'ORDER-' . $order->id,
+                'gross_amount' => (int) $order->total,
+            ],
+            'customer_details' => [
+                'first_name' => $order->customer->first_name,
+                'email' => $order->customer->email,
+                'phone' => $order->customer->phone
+            ],
+            'enable_payment' => [
+                'qris'
+            ]
+        ];
+        // $snapToken = Snap::getSnapToken($params);
+        $snap = Snap::createTransaction($params);
+        return response()->json(['token' => $snap->token]);
+    }
+
+    public function payCash(Request $request, $id)
+{
+    $order = TransOrders::findOrFail($id);
+
+    // Simpan pembayaran cash ke database (misalnya update status)
+    $order->status_text = 1;
+    $order->save();
+
+    return redirect()->route('trans.index')->with('success', 'Pembayaran cash berhasil!');
+}
+
 
     /**
      * Show the form for creating a new resource.
@@ -75,32 +110,6 @@ class TransOrderController extends Controller
         // TransOrders::create($request->all());
         return redirect()->to('trans')->with('success', 'Data Berhasil Ditambah');
     }
-
-
-    // public function snap(Request $request, $id)
-    // {
-    //     $order = TransOrders::with('details', 'customer')->findOrFail($id);
-
-    //     $params = [
-    //         'transaction_details' => [
-    //             'order_id' => rand(),
-    //             'gross_amount' => 10000,
-    //         ],
-    //         'customer_details' => [
-    //             'first_name' => 'Bambang',
-    //             'last_name' => 'Pamungkas',
-    //             'email' => 'bambang@gmail.com',
-    //             'phone' => '0812383028',
-    //         ],
-    //         'enable_payment' => [
-    //             'qris'
-    //         ]
-    //     ];
-    //     // $snapToken = Snap::getSnapToken($params);
-    //     $snap = Snap::createTransaction($params);
-    //     return response()->json(['token' => $snap->token]);
-    // }
-
     /**
      * Display the specified resource.
      */
