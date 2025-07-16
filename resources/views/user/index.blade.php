@@ -28,7 +28,7 @@
                                 <td>{{ $key + 1 }}</td>
                                 <td> {{ $data->name}} </td>
                                 <td>{{( $data->email ) }}</td>
-                                <td><td>{{ $data->level->level_name ?? '-'}}</td></td>
+                                <td>{{ $data->level->name ?? '-'}}</td>
                                 <td>
                                     <a href="{{ route('user.edit', $data->id) }}" class="btn btn-success">Edit</a>
                                     <form action="{{ route('user.destroy', $data->id) }}" method="POST" style="display: inline;">

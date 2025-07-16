@@ -57,15 +57,15 @@ class PaymentController extends Controller
     }
 
     public function payCash(Request $request, $id)
-{
-    $order = TransOrders::findOrFail($id);
+    {
+        $order = TransOrders::findOrFail($id);
 
-    // Simpan pembayaran cash ke database (misalnya update status)
-    $order->status_text = 1;
-    $order->save();
+        // Simpan pembayaran cash ke database (misalnya update status)
+        $order->status_text = 1;
+        $order->save();
 
-    return redirect()->route('trans.index')->with('success', 'Pembayaran cash berhasil!');
-}
+        return redirect()->to('trans.index')->with('success', 'Pembayaran cash berhasil!');
+    }
 
 
     /**
@@ -113,10 +113,7 @@ class PaymentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id, Request $request)
-    {
-
-    }
+    public function show(string $id, Request $request) {}
 
     /**
      * Show the form for editing the specified resource.

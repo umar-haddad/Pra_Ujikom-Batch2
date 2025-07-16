@@ -20,7 +20,7 @@
                             <select name="id_level" id="id_level" class="form-control" required>
                                     <option value=""><-- pilih --></option>
                                 @foreach ($levels as $level)
-                                    <option value="{{ $level->id }}">{{ $level->level_name }}</option>
+                                    <option value="{{ $level->id }}">{{ $level->name }}</option>
                                 @endforeach
                             </select>
                         </div>

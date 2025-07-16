@@ -21,7 +21,7 @@ class TransOrderController extends Controller
         Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
         Config::$isSanitized = true;
         Config::$is3ds = true;
-    }   
+    }
     /**
      * Display a listing of the resource.
      */
@@ -101,7 +101,12 @@ class TransOrderController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $order = TransOrders::findOrFail($id);
+        $order->order_pay = $request->order_pay;
+        $order->order_change = $request->order_change;
+        $order->order_status = 1;
+        $order->save();
+        return redirect()->to('trans')->with('success', 'Data updated successfully');
     }
 
     /**
@@ -117,10 +122,12 @@ class TransOrderController extends Controller
 
     public function printStruk(string $id)
     {
-        $details = TransOrders::with(['customer', 'transOrderDetail.service'])->where('id', $id)->first();
+        $details = TransOrders::with(['customer', 'details.service'])->where('id', $id)->first();
         // return $details; // ->  buat debug laravel dan ada lagi yaitu => dd($details);
+        // $details = TransOrders::with('customer', 'details')->where('id', $id)->first();
+        // return view('trans.print_struk', compact('details'));
 
-        $pdf = Pdf::loadView('trans.print', compact('details'));
+        $pdf = Pdf::loadView('trans.print_struk', compact('details'));
         return $pdf->download('struk-transaksi.pdf');
     }
 
@@ -146,7 +153,7 @@ class TransOrderController extends Controller
         $snap = Snap::createTransaction($params);
         return response()->json(['token' => $snap->token]);
     }
-    
+
     public function transStore(Request $request)
     {
         return $request;

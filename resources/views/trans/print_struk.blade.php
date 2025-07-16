@@ -83,12 +83,12 @@
             </div>
             <div class="row">
                 <span>Customer:</span>
-                <span>{{ $customer->name ?? '-' }}</span>
+                <span>{{ $details->customer->name ?? '-' }}</span>
             </div>
         </div>
         <div class="line"></div>
 
-        @foreach ($details->transOrderDetail as $detail)
+        @foreach ($details->details as $detail)
 
             <div class="service">
                 <div class="item">

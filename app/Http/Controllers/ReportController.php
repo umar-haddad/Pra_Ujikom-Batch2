@@ -3,30 +3,32 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\TransOrderDetail;
 
-class DashboardController extends Controller
+class ReportController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $title = "Artikel";
-        return view('dashboard.index', compact('title'));
-    }
-    public function indexService()
-    {
-        return view('service.index');
-    }
+        $title = 'Report';
 
-    public function showInsService()
-    {
-        return view('service.create');
-    }
+        if ($request->date_start && $request->date_end) {
+            $startDate = $request->date_start;
+            $endDate = $request->date_end;
 
-    public function showErrorPage()
-    {
-        return view('error404');
+            $details = TransOrderDetail::with(['transOrder.customer', 'service'])
+                ->whereDate('order_date', '>=', $startDate)
+                ->whereDate('order_date', '<=', $endDate)
+                ->get();
+
+
+            return view('report.index', compact('title', 'details'));
+        }
+
+        $details = TransOrderDetail::with(['transOrder.customer', 'service'])->get();
+        return view('report.index', compact('details', 'title'));
     }
 
     /**

@@ -11,7 +11,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🧺 Sistem Informasi Laundry</h1>
+            <h1>🧺 Wakey Laundry</h1>
             <p class="subtitle">Point of Sales System - Kelola Transaksi Laundry dengan Mudah</p>
         </div>
 
@@ -148,9 +148,10 @@
             <button class="btn btn-primary" onclick="showReports()" style="margin: 0 10px;">
                 📈 Laporan Penjualan
             </button>
-            <button class="btn btn-warning" onclick="manageServices()" style="margin: 0 10px;">
+            <a class="btn btn-warning" style="margin: 0 10px;" href="{{route('trans.index')}}">⚙️ Dashboard</a>
+            {{-- <button class="btn btn-warning" href onclick="manageServices()" style="margin: 0 10px;">
                 ⚙️ Kelola Layanan
-            </button>
+            </button> --}}
             <button class="btn btn-danger" onclick="clearCart()" style="margin: 0 10px;">
                 🗑️ Bersihkan Keranjang
             </button>
@@ -197,14 +198,14 @@
         //     }
 
 
-        //     const item = {
-        //         id: Date.now(),
-        //         service: serviceType,
-        //         weight: weight,
-        //         price: price,
-        //         subtotal: subtotal,
-        //         notes: notes
-        //     };
+            // const item = {
+            //     id: Date.now(),
+            //     service: serviceType,
+            //     weight: weight,
+            //     price: price,
+            //     subtotal: subtotal,
+            //     notes: notes
+            // };
 
         //     cart.push(item);
         //     updateCartDisplay();
@@ -305,7 +306,7 @@
             showReceipt(transaction);
 
             // Clear form and cart
-            
+
             updateTransactionHistory();
             updateStats();
         }
@@ -360,7 +361,7 @@
         }
 
         function printReceipt() {
-            window.print();
+            location.window.print();
         }
 
         function updateTransactionHistory() {
@@ -494,7 +495,7 @@
         }
 
         function manageServices() {
-            const servicesHtml = `
+            const servicesData = `
                 <h2>⚙️ Kelola Layanan</h2>
                 <p>Fitur ini memungkinkan Anda mengelola jenis layanan dan harga.</p>
 
@@ -512,36 +513,6 @@
                             <td>Cuci Kering</td>
                             <td>Rp 5.000</td>
                             <td>per kg</td>
-                            <td><span class="status-badge status-ready">Aktif</span></td>
-                        </tr>
-                        <tr>
-                            <td>Cuci Setrika</td>
-                            <td>Rp 7.000</td>
-                            <td>per kg</td>
-                            <td><span class="status-badge status-ready">Aktif</span></td>
-                        </tr>
-                        <tr>
-                            <td>Setrika Saja</td>
-                            <td>Rp 3.000</td>
-                            <td>per kg</td>
-                            <td><span class="status-badge status-ready">Aktif</span></td>
-                        </tr>
-                        <tr>
-                            <td>Dry Clean</td>
-                            <td>Rp 15.000</td>
-                            <td>per kg</td>
-                            <td><span class="status-badge status-ready">Aktif</span></td>
-                        </tr>
-                        <tr>
-                            <td>Cuci Sepatu</td>
-                            <td>Rp 25.000</td>
-                            <td>per pasang</td>
-                            <td><span class="status-badge status-ready">Aktif</span></td>
-                        </tr>
-                        <tr>
-                            <td>Cuci Karpet</td>
-                            <td>Rp 20.000</td>
-                            <td>per m²</td>
                             <td><span class="status-badge status-ready">Aktif</span></td>
                         </tr>
                     </tbody>
