@@ -32,24 +32,25 @@
                                     <th>Date</th>
                                     <th>Service</th>
                                     <th>Qty</th>
+                                    <th>status</th>
                                     <th>Price</th>
                                     <th>Subtotal</th>
-                                    <th>status</th>
                                 </tr>
                             </thead>
                             <tbody>
 
                                 @foreach ($details as $detail)
-
+                                @if ($detail->transOrder->order_status == 1)
                                 <tr>
                                     <td>{{ $detail->transOrder->customer->name }}</td>
                                     <td>{{ $detail->transOrder->created_at }}</td>
                                     <td>{{ $detail->service->service_name }}</td>
                                     <td>{{ $detail->qty }}</td>
+                                    <td>{{ $detail->transOrder->status_text }}</td>
                                     <td>{{ $detail->service->price }}</td>
                                     <td>{{ $detail->subtotal }}</td>
-                                    <td>{{ $detail->transOrder->order_status}}</td>
                                 </tr>
+                                @endif
                                 @endforeach
                             </tbody>
                         </table>

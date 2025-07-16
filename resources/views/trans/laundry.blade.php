@@ -361,7 +361,7 @@
         }
 
         function printReceipt() {
-            location.window.print();
+            window.print();
         }
 
         function updateTransactionHistory() {

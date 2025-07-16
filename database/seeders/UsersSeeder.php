@@ -19,6 +19,7 @@ class UsersSeeder extends Seeder
 
         User::create(
             [
+                //admininstrator
                 'id_level' => 1,
                 'name' => 'Umar',
                 'email' => 'umar@gmail.com',
@@ -27,9 +28,19 @@ class UsersSeeder extends Seeder
         );
         User::create(
             [
+                //Operator
                 'id_level' => 2,
-                'name' => 'admin',
-                'email' => 'admin123@gmail.com',
+                'name' => 'operator',
+                'email' => 'opera@gmail.com',
+                'password' => Hash::make('123'),
+            ]
+        );
+        User::create(
+            [
+                //leader
+                'id_level' => 3,
+                'name' => 'leader',
+                'email' => 'leader@gmail.com',
                 'password' => Hash::make('123'),
             ]
         );
